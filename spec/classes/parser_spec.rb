@@ -4,6 +4,7 @@ describe X12::Parser do
   describe "#initialize" do
 
     it "processes a file" do
+      File.stub(:exists?).and_return { true }
       File.stub_chain(:open, :read).and_return(sample_xml)
       p = X12::Parser.new("blah.xml")
       definition = p.instance_variable_get("@x12_definition")

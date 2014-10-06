@@ -29,6 +29,7 @@ module X12
   # Main class for creating X12 parsers and factories.
 
   class Parser
+    @@path = []
 
     # These constitute prohibited file names under Microsoft
     MS_DEVICES = [   
@@ -63,7 +64,16 @@ module X12
       save_definition = @x12_definition
 
       # Read and parse the definition
-      str = File.open(X12::Parser.sanitized_file_name(file_name), 'r').read
+      # str = File.open(X12::Parser.sanitized_file_name(file_name), 'r').read
+
+      str = nil
+      @@path + [File.join(File.dirname(__FILE__), "../../misc")].each do |path|
+        here = X12::Parser.sanitized_file_name(File.join(path, File.basename(file_name)))
+        puts here
+        next unless File.exists?(here)
+        str = File.open(here).read
+      end
+        
       @dir_name = File.dirname(File.expand_path(file_name)) # to look up other files if needed
       @x12_definition = X12::XMLDefinitions.new(str)
 
@@ -119,25 +129,25 @@ module X12
       }
     end
     
-    def lookup_definition(name, is_segment = true)
-      definition = nil
-      [@dir_name, File.dirname(__FILE__), "../../misc"].each do |dir_name|
-        initialize(File.join(dir_name, name+'.xml'))
-        definition = is_segment ? @x12_definition[X12::Segment][name] : @x12_definition[X12::Table] && @x12_definition[X12::Table][name]
-        break if definition
-      end
-      throw Exception.new("Cannot find a definition for #{is_segment ? 'segment' : 'table'} #{name}") unless definition
-      definition
-    end
+    # def lookup_definition(name, is_segment = true)
+    #   definition = nil
+    #   [@dir_name, File.dirname(__FILE__), "../../misc"].each do |dir_name|
+    #     initialize(File.join(dir_name, name+'.xml'))
+    #     definition = is_segment ? @x12_definition[X12::Segment][name] : @x12_definition[X12::Table] && @x12_definition[X12::Table][name]
+    #     break if definitio
+    #   end
+    #   throw Exception.new("Cannot find a definition for #{is_segment ? 'segment' : 'table'} #{name}") unless definition
+    #   definition
+    # end
 
     # Instantiate segment's fields as previously defined
     def process_segment(segment)
       unless @x12_definition[X12::Segment] && @x12_definition[X12::Segment][segment.name]
         # Try to find it in a separate file if missing from the @x12_definition structure
-        segment_definition = lookup_definition(segment.name, true)
-        # initialize(File.join(@dir_name, segment.name+'.xml'))
-        # segment_definition = @x12_definition[X12::Segment][segment.name]
-        # throw Exception.new("Cannot find a definition for segment #{segment.name}") unless segment_definition
+        # segment_definition = lookup_definition(segment.name, true)
+        initialize(File.join(@dir_name, segment.name+'.xml'))
+        segment_definition = @x12_definition[X12::Segment][segment.name]
+        throw Exception.new("Cannot find a definition for segment #{segment.name}") unless segment_definition
       else
         segment_definition = @x12_definition[X12::Segment][segment.name]
       end
@@ -147,9 +157,9 @@ module X12
         table = segment.nodes[i].validation
         if table
           unless @x12_definition[X12::Table] && @x12_definition[X12::Table][table]
-            lookup_definition(table, false)
-            # initialize(File.join(@dir_name, table+'.xml'))
-            # throw Exception.new("Cannot find a definition for table #{table}") unless @x12_definition[X12::Table] && @x12_definition[X12::Table][table]
+            # lookup_definition(table, false)
+            initialize(File.join(@dir_name, table+'.xml'))
+            throw Exception.new("Cannot find a definition for table #{table}") unless @x12_definition[X12::Table] && @x12_definition[X12::Table][table]
           end
         end
       }

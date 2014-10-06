@@ -3,6 +3,7 @@ require 'spec_helper'
 describe "a mixed template" do
   let(:parser) { X12::Parser.new('blah') }
   before do
+    File.stub(:exists?).and_return { true }
     File.stub_chain(:open, :read).and_return(mixed_xml)
   end
 
