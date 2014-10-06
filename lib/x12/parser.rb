@@ -30,6 +30,10 @@ module X12
 
   class Parser
     @@path = []
+    
+    def self.path=(x)
+      @@path = x
+    end
 
     # These constitute prohibited file names under Microsoft
     MS_DEVICES = [   
