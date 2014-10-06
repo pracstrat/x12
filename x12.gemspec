@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'nokogiri'
 
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec')
+  s.add_development_dependency('rspec', '~> 2.14.1')
   s.add_development_dependency('awesome_print')
   s.add_development_dependency('rake')
   s.add_development_dependency('byebug') if RUBY_VERSION =~ /^2/

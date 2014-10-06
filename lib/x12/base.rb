@@ -53,13 +53,20 @@ module X12
     def inspect
       "#{self.class.to_s.sub(/^.*::/, '')} (#{name}) #{repeats} #{super.inspect[1..-2]} =<#{parsed_str}, #{next_repeat.inspect}> ".gsub(/\\*\"/, '"')
     end
+    
+    def show(ind = '')
+      puts pretty_print(ind)
+    end
 
     # Prints a tree-like representation of the element
-    def show(ind = '')
+    def pretty_print(ind = '')
       count = 0
+      retval = ""
       self.to_a.each{|i|
-        puts "#{ind}#{i.name} #{i.object_id} #{i.super.object_id} [#{count}]: #{i.parsed_str} #{i.super.class}"
-        puts "#{ind}#{i.name} [#{count}]: #{i.to_s.sub(/^(.{30})(.*?)(.{30})$/, '\1...\3')}"
+        # puts "#{ind}#{i.name} #{i.object_id} #{i.super.object_id} [#{count}]: #{i.parsed_str} #{i.super.class}"
+        # puts "#{ind}#{i.name} [#{count}]: #{i.to_s.sub(/^(.{30})(.*?)(.{30})$/, '\1...\3')}"
+        retval << "#{ind}#{i.name} #{i.object_id} #{i.super.object_id} [#{count}]: #{i.parsed_str} #{i.super.class}"
+        retval << "#{ind}#{i.name} [#{count}]: #{i.to_s.sub(/^(.{30})(.*?)(.{30})$/, '\1...\3')}"
         # Force parsing a segment
         if i.kind_of?(X12::Segment) && i.nodes[0]
           i.find_field(i.nodes[0].name)
@@ -67,14 +74,43 @@ module X12
         i.nodes.each{|j|
           case 
           when j.kind_of?(X12::Base)
-            j.show(ind+'  ')
+            # j.show(ind+'  ')
+            retval << j.pretty_print(ind + '  ')
           when j.kind_of?(X12::Field)
-            puts "#{ind+'  '}#{j.name} -> '#{j.to_s}'"
+            # puts "#{ind+'  '}#{j.name} -> '#{j.to_s}'"
+            retval << "#{ind+'  '}#{j.name} -> '#{j.to_s}'"
           end
         } 
         count += 1
       }
+      
+      retval
     end
+    
+    # def show(ind = '')
+    #   puts pretty_print(ind)
+    # end
+    #
+    # def pretty_print(ind = '')
+    #   count = 0
+    #   retval = ""
+    #   self.to_a.each{|i|
+    #     retval += "#{ind}#{i.name} [#{count}]: #{i.to_s.sub(/^(.{30})(.*?)(.{30})$/, '\1...\3')}\n"
+    #     if i.kind_of?(X12::Segment) && i.nodes[0]
+    #       i.find_field(i.nodes[0].name)
+    #     end
+    #     i.nodes.each{|j|
+    #       case
+    #       when j.kind_of?(X12::Base)  then retval += j.pretty_print(ind+'  ')
+    #       when j.kind_of?(X12::Field) then retval += "#{ind+'  '}#{j.name} -> '#{j.to_s}'\n"
+    #       end
+    #     }
+    #     count += 1
+    #   }
+    #
+    #   retval
+    # end
+    
 
     # Try to parse the current element one more time if required. Returns the rest of the string
     # or the same string if no more repeats are found or required.
